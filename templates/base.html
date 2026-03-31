@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}EduVault – Resource Portal{% endblock %}</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    :root {
+      --primary:   #17A3B9;
+      --primary-d: #117a8b;
+      --accent:    #66bb6a;
+      --admin:     #e74c3c;
+      --teacher:   #f39c12;
+      --bg:        linear-gradient(135deg, #f0fbff 0%, #e8f5e9 100%);
+    }
+    * { box-sizing: border-box; }
+    body { font-family: 'Poppins', sans-serif; background: var(--bg); min-height: 100vh; }
+
+    /* ── NAVBAR ── */
+    .navbar-custom {
+      background: var(--primary);
+      box-shadow: 0 4px 14px rgba(0,0,0,.18);
+      padding: 0 1rem;
+      height: 58px;
+      display: flex;
+      align-items: center;
+    }
+    .navbar-brand {
+      font-weight: 700;
+      font-size: 1rem;
+      color: #fff !important;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .brand-icon {
+      background: #fff;
+      color: var(--primary);
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .8rem;
+      flex-shrink: 0;
+    }
+    .nav-links-group {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      margin: 0 auto;
+      flex-wrap: nowrap;
+    }
+    .nav-link-custom {
+      color: rgba(255,255,255,.85) !important;
+      font-size: .78rem;
+      font-weight: 500;
+      padding: 5px 10px;
+      border-radius: 20px;
+      transition: background .2s, color .2s;
+      white-space: nowrap;
+      text-decoration: none;
+    }
+    .nav-link-custom:hover, .nav-link-custom.active {
+      background: rgba(255,255,255,.2);
+      color: #fff !important;
+    }
+    .badge-role {
+      font-size: .62rem;
+      padding: 3px 8px;
+      border-radius: 20px;
+      font-weight: 600;
+      letter-spacing: .03em;
+      white-space: nowrap;
+    }
+    .badge-admin   { background: var(--admin);   color: #fff; }
+    .badge-teacher { background: var(--teacher); color: #fff; }
+    .badge-student { background: var(--accent);  color: #fff; }
+
+    /* ── SEARCH ── */
+    .search-box {
+      background: rgba(255,255,255,.18);
+      border: 1px solid rgba(255,255,255,.3);
+      border-radius: 20px;
+      padding: 2px 4px;
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .search-box input {
+      border: none;
+      outline: none;
+      padding: 4px 10px;
+      font-size: .78rem;
+      width: 160px;
+      background: transparent;
+      color: #fff;
+    }
+    .search-box input::placeholder { color: rgba(255,255,255,.65); }
+    .search-box button {
+      background: rgba(255,255,255,.25);
+      border: none;
+      color: #fff;
+      border-radius: 50%;
+      width: 26px; height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background .2s;
+      flex-shrink: 0;
+    }
+    .search-box button:hover { background: rgba(255,255,255,.4); }
+
+    /* ── USER INFO ── */
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .user-name {
+      color: #fff;
+      font-size: .78rem;
+      font-weight: 500;
+      white-space: nowrap;
+      max-width: 100px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* ── CARDS ── */
+    .card-portal {
+      background: #fff;
+      border-radius: 18px;
+      padding: 28px;
+      box-shadow: 0 10px 28px rgba(0,0,0,.07);
+      animation: slideUp .45s ease;
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── FORMS ── */
+    .form-control, .form-select {
+      border-radius: 12px;
+      padding: 10px 14px;
+      border: 2px solid #e8e8e8;
+      transition: border-color .2s, box-shadow .2s;
+      font-size: .875rem;
+    }
+    .form-control:focus, .form-select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(23,163,185,.12);
+    }
+    .form-select-sm, .form-control-sm {
+      padding: 5px 10px;
+      font-size: .8rem;
+    }
+
+    /* ── BUTTONS ── */
+    .btn-portal {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 11px 22px;
+      font-weight: 600;
+      font-size: .875rem;
+      transition: transform .2s, box-shadow .2s;
+      white-space: nowrap;
+    }
+    .btn-portal:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 18px rgba(23,163,185,.35);
+      color: #fff;
+    }
+    .btn-portal-sm {
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-size: .78rem;
+    }
+
+    /* ── TABLES ── */
+    .table-portal { border-collapse: separate; border-spacing: 0 8px; }
+    .table-portal thead th {
+      color: #888;
+      font-weight: 600;
+      border: none;
+      background: transparent;
+      font-size: .75rem;
+      text-transform: uppercase;
+      padding: 6px 14px;
+    }
+    .table-portal tbody tr {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 3px 10px rgba(0,0,0,.06);
+      transition: transform .15s, box-shadow .15s;
+    }
+    .table-portal tbody tr:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 18px rgba(0,0,0,.1);
+    }
+    .table-portal tbody td {
+      border: none;
+      vertical-align: middle;
+      padding: 11px 14px;
+      font-size: .85rem;
+    }
+
+    /* ── BADGES ── */
+    .type-badge { padding: 4px 10px; border-radius: 20px; font-size: .7rem; font-weight: 600; white-space: nowrap; }
+    .type-notes    { background: #e8f5e9; color: #2e7d32; }
+    .type-question { background: #fff3e0; color: #e65100; }
+    .status-badge  { padding: 4px 10px; border-radius: 20px; font-size: .7rem; font-weight: 600; white-space: nowrap; }
+    .s-approved { background: #e3f2fd; color: #1565c0; }
+    .s-verified { background: #e8f5e9; color: #1b5e20; }
+    .s-pending  { background: #fff8e1; color: #f57f17; }
+    .s-rejected { background: #fce4ec; color: #b71c1c; }
+
+    /* ── STATS ── */
+    .stat-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px 16px;
+      box-shadow: 0 6px 18px rgba(0,0,0,.07);
+      text-align: center;
+      height: 100%;
+    }
+    .stat-card .stat-number { font-size: 1.8rem; font-weight: 700; color: var(--primary); line-height: 1.1; }
+    .stat-card .stat-label  { font-size: .75rem; color: #888; font-weight: 500; margin-top: 4px; }
+
+    /* ── ALERTS ── */
+    .alert { border-radius: 12px; animation: slideUp .35s ease; font-size: .875rem; }
+
+    /* ── SIDEBAR (admin) ── */
+    .admin-sidebar {
+      background: #fff;
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 6px 18px rgba(0,0,0,.07);
+      position: sticky;
+      top: 20px;
+    }
+    .admin-sidebar .side-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      color: #555;
+      font-weight: 500;
+      font-size: .875rem;
+      text-decoration: none;
+      transition: background .2s, color .2s;
+      margin-bottom: 4px;
+    }
+    .admin-sidebar .side-link:hover, .admin-sidebar .side-link.active {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    /* ── DOWNLOAD BTN ALIGNMENT ── */
+    .action-col { white-space: nowrap; }
+    .action-col .btn { display: inline-flex; align-items: center; gap: 4px; }
+
+    /* ── RESPONSIVE FIXES ── */
+    @media (max-width: 991px) {
+      .nav-links-group { display: none; }
+      .search-box input { width: 120px; }
+    }
+    @media (max-width: 767px) {
+      .search-box { display: none; }
+      .user-name  { display: none; }
+    }
+  </style>
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- ─── NAVBAR ─── -->
+<nav class="navbar-custom">
+  <a class="navbar-brand" href="{{ url_for('dashboard') if current_user.is_authenticated else url_for('login') }}">
+    <span class="brand-icon"><i class="fa-solid fa-book-open"></i></span>
+    EduVault
+  </a>
+
+  {% if current_user.is_authenticated %}
+    <div class="nav-links-group">
+      <a href="{{ url_for('resources') }}" class="nav-link-custom {% if request.endpoint=='resources' %}active{% endif %}">
+        <i class="fa fa-folder-open me-1"></i>Resources
+      </a>
+      <a href="{{ url_for('upload') }}" class="nav-link-custom {% if request.endpoint=='upload' %}active{% endif %}">
+        <i class="fa fa-upload me-1"></i>Upload
+      </a>
+      <a href="{{ url_for('my_uploads') }}" class="nav-link-custom {% if request.endpoint=='my_uploads' %}active{% endif %}">
+        <i class="fa fa-list me-1"></i>My Uploads
+      </a>
+      {% if current_user.role in ['admin','teacher'] %}
+      <a href="{{ url_for('admin_resources') }}" class="nav-link-custom {% if request.endpoint=='admin_resources' %}active{% endif %}">
+        <i class="fa fa-check-circle me-1"></i>Review
+      </a>
+      {% endif %}
+      {% if current_user.role == 'admin' %}
+      <a href="{{ url_for('admin_dashboard') }}" class="nav-link-custom {% if request.endpoint=='admin_dashboard' %}active{% endif %}">
+        <i class="fa fa-shield me-1"></i>Admin
+      </a>
+      {% endif %}
+    </div>
+
+    <div class="d-flex align-items-center gap-2 ms-auto">
+      <form method="GET" action="{{ url_for('resources') }}" style="margin:0;">
+        <div class="search-box">
+          <input type="search" name="q" placeholder="Search…" value="{{ request.args.get('q','') }}">
+          <button type="submit"><i class="fa fa-magnifying-glass" style="font-size:.65rem;"></i></button>
+        </div>
+      </form>
+
+      <div class="user-info">
+        <span class="badge-role badge-{{ current_user.role }}">{{ current_user.role.capitalize() }}</span>
+        <span class="user-name">{{ current_user.name }}</span>
+        <a href="{{ url_for('logout') }}" class="btn btn-dark btn-sm rounded-pill px-3" style="font-size:.75rem;white-space:nowrap;">
+          <i class="fa fa-right-from-bracket me-1"></i>Logout
+        </a>
+      </div>
+    </div>
+  {% endif %}
+</nav>
+
+<!-- ─── FLASH MESSAGES ─── -->
+{% with messages = get_flashed_messages(with_categories=True) %}
+  {% for cat, msg in messages %}
+    <div class="alert alert-{{ 'danger' if cat=='danger' else 'warning' if cat=='warning' else 'success' }} alert-dismissible fade show mx-4 mt-3" role="alert">
+      <i class="fa {{ 'fa-circle-xmark' if cat=='danger' else 'fa-triangle-exclamation' if cat=='warning' else 'fa-circle-check' }} me-2"></i>{{ msg }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  {% endfor %}
+{% endwith %}
+
+<div class="container-fluid px-4 mt-4 pb-5">
+  {% block content %}{% endblock %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

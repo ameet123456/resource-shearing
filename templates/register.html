@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Register – EduVault{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6 col-lg-5">
+    <div class="card-portal text-center">
+      <h4 class="fw-bold mb-1" style="color:#17A3B9;">Join EduVault</h4>
+      <p class="text-muted small mb-4">Create your account to share and access resources</p>
+
+      <form method="POST">
+        <div class="mb-3 text-start">
+          <label class="mb-1 small fw-600"><i class="fa fa-user me-1" style="color:#66bb6a;"></i>Full Name</label>
+          <input class="form-control" name="name" placeholder="Enter your full name" required>
+        </div>
+        <div class="mb-3 text-start">
+          <label class="mb-1 small fw-600"><i class="fa fa-envelope me-1" style="color:#66bb6a;"></i>Email</label>
+          <input class="form-control" name="email" type="email" placeholder="Enter your email" required>
+        </div>
+        <div class="mb-3 text-start">
+          <label class="mb-1 small fw-600"><i class="fa fa-lock me-1" style="color:#66bb6a;"></i>Password</label>
+          <input class="form-control" name="password" type="password" placeholder="Minimum 6 characters" required>
+        </div>
+        <div class="mb-4 text-start">
+          <label class="mb-1 small fw-600"><i class="fa fa-id-badge me-1" style="color:#66bb6a;"></i>I am a…</label>
+          <select class="form-select" name="role">
+            <option value="student">Student</option>
+            <option value="teacher">Teacher / Faculty</option>
+          </select>
+        </div>
+        <button class="btn btn-portal w-100 mb-3">Create Account</button>
+        <p class="text-muted small mb-0">Already have an account? <a href="{{ url_for('login') }}" class="fw-600 text-decoration-none" style="color:#17A3B9;">Login here</a></p>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

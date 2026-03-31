@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="text-center py-5">
+  <i class="fa fa-triangle-exclamation fa-4x mb-3" style="color:#17A3B9;"></i>
+  <h3 class="fw-bold">404 – Page Not Found</h3>
+  <p class="text-muted">The page you're looking for doesn't exist.</p>
+  <a href="{{ url_for('dashboard') }}" class="btn btn-portal btn-portal-sm mt-2">Go to Dashboard</a>
+</div>
+{% endblock %}

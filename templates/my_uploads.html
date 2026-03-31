@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}My Uploads – EduVault{% endblock %}
+{% block content %}
+
+<h5 class="fw-bold mb-4"><i class="fa fa-list me-2" style="color:#17A3B9;"></i>My Uploads</h5>
+
+{% if data %}
+<div class="card-portal" style="padding:0;overflow:hidden;">
+  <div class="table-responsive">
+    <table class="table table-portal mb-0" style="margin:12px 0;">
+      <thead>
+        <tr>
+          <th>Title</th><th>Subject</th><th>Type</th><th>Status</th>
+          <th class="text-center">Downloads</th><th>Uploaded On</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in data %}
+        <tr>
+          <td><strong>{{ r['title'] }}</strong></td>
+          <td class="small text-muted">{{ r['subjectName'] }}</td>
+          <td>
+            <span class="type-badge {{ 'type-notes' if r['note_type']=='Notes' else 'type-question' }}">
+              {{ r['note_type'] }}
+            </span>
+          </td>
+          <td>
+            <span class="status-badge s-{{ r['status'] }}">
+              {% if r['status'] == 'verified' %}<i class="fa fa-shield-halved me-1"></i>Verified
+              {% elif r['status'] == 'approved' %}<i class="fa fa-check me-1"></i>Approved
+              {% elif r['status'] == 'pending' %}<i class="fa fa-clock me-1"></i>Pending
+              {% else %}<i class="fa fa-times me-1"></i>Rejected{% endif %}
+            </span>
+          </td>
+          <td class="text-center small">{{ r['downloads'] }}</td>
+          <td class="small text-muted">{{ r['created_at'][:10] if r['created_at'] else '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="card-portal text-center py-5">
+  <i class="fa fa-inbox fa-3x text-muted mb-3"></i>
+  <p class="text-muted">You haven't uploaded anything yet.</p>
+  <a href="{{ url_for('upload') }}" class="btn btn-portal btn-portal-sm mt-2">Upload your first resource</a>
+</div>
+{% endif %}
+{% endblock %}

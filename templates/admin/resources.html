@@ -1,0 +1,78 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Manage Resources – EduVault{% endblock %}
+{% block admin_content %}
+
+<div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+  <h5 class="fw-bold mb-0"><i class="fa fa-file-alt me-2" style="color:#17A3B9;"></i>Manage Resources</h5>
+  <span class="badge bg-light text-dark border" style="font-size:.8rem;">{{ data|length }} records</span>
+</div>
+
+<!-- Status filter tabs -->
+<div class="d-flex gap-2 mb-3 flex-wrap">
+  {% for s in ['', 'pending', 'approved', 'verified', 'rejected'] %}
+  <a href="{{ url_for('admin_resources') }}{% if s %}?status={{ s }}{% endif %}"
+     class="btn btn-sm {{ 'btn-portal' if status_filter==s else 'btn-outline-secondary' }} rounded-pill">
+    {% if s == '' %}All{% else %}{{ s.capitalize() }}{% endif %}
+  </a>
+  {% endfor %}
+</div>
+
+<div class="card-portal" style="padding:0;overflow:hidden;">
+  <div class="table-responsive">
+    <table class="table table-portal mb-0" style="margin:12px 0;">
+      <thead>
+        <tr>
+          <th>Title</th><th>Subject</th><th>Branch</th><th>Type</th>
+          <th>Uploaded By</th><th>Status</th><th class="text-center">Downloads</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in data %}
+        <tr>
+          <td style="max-width:160px;"><strong>{{ r['title'] }}</strong></td>
+          <td class="small text-muted">{{ r['subjectName'] }}</td>
+          <td><span class="badge bg-light text-dark border" style="font-size:.72rem;">{{ r['branch'] }}</span></td>
+          <td>
+            <span class="type-badge {{ 'type-notes' if r['note_type']=='Notes' else 'type-question' }}">
+              {{ r['note_type'] }}
+            </span>
+          </td>
+          <td class="small text-muted">{{ r['uploader_name'] }}</td>
+          <td><span class="status-badge s-{{ r['status'] }}">{{ r['status'].capitalize() }}</span></td>
+          <td class="text-center small">{{ r['downloads'] }}</td>
+          <td class="action-col">
+            <div class="d-flex align-items-center gap-1 flex-wrap">
+              <form method="POST" action="{{ url_for('change_resource_status', rid=r['id']) }}"
+                    class="d-flex gap-1 align-items-center">
+                <select name="status" class="form-select form-select-sm" style="width:108px;">
+                  {% for s in ['approved','verified','pending','rejected'] %}
+                  <option value="{{ s }}" {{ 'selected' if r['status']==s }}>{{ s.capitalize() }}</option>
+                  {% endfor %}
+                </select>
+                <button class="btn btn-sm btn-portal btn-portal-sm" style="padding:5px 10px;">Save</button>
+              </form>
+              <a href="{{ url_for('download', filename=r['filename']) }}"
+                 class="btn btn-sm btn-outline-primary rounded-pill" style="padding:5px 10px;" title="Download">
+                <i class="fa fa-download"></i>
+              </a>
+              {% if current_user.role == 'admin' %}
+              <form method="POST" action="{{ url_for('delete_resource', rid=r['id']) }}"
+                    onsubmit="return confirm('Permanently delete this resource?')">
+                <button class="btn btn-sm btn-danger rounded-pill" style="padding:5px 10px;" title="Delete">
+                  <i class="fa fa-trash"></i>
+                </button>
+              </form>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if not data %}
+  <div class="text-center py-4 text-muted">No resources found.</div>
+  {% endif %}
+</div>
+
+{% endblock %}

@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}Dashboard – EduVault{% endblock %}
+{% block content %}
+
+<!-- Welcome Banner -->
+<div class="card-portal mb-4 d-flex align-items-center gap-3" style="padding:20px 28px;">
+  <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+       style="width:56px;height:56px;background:linear-gradient(135deg,#17A3B9,#66bb6a);">
+    <i class="fa fa-user fa-lg text-white"></i>
+  </div>
+  <div>
+    <h5 class="mb-0 fw-bold">Welcome back, {{ current_user.name }}
+      <span class="badge-role badge-{{ current_user.role }} ms-2">{{ current_user.role.capitalize() }}</span>
+    </h5>
+    <p class="text-muted mb-0 small">Access, share and manage college study resources from one place.</p>
+  </div>
+</div>
+
+<!-- Stats Row -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="stat-card">
+      <div class="stat-number">{{ stats.total_resources }}</div>
+      <div class="stat-label"><i class="fa fa-folder-open me-1"></i>Resources Available</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card">
+      <div class="stat-number">{{ stats.my_uploads }}</div>
+      <div class="stat-label"><i class="fa fa-upload me-1"></i>My Uploads</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card">
+      <div class="stat-number" style="color:#66bb6a;">6</div>
+      <div class="stat-label"><i class="fa fa-calendar me-1"></i>Semesters</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card">
+      <div class="stat-number" style="color:#f39c12;">5</div>
+      <div class="stat-label"><i class="fa fa-code-branch me-1"></i>Branches</div>
+    </div>
+  </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="card-portal h-100 text-center" style="padding:24px 20px;">
+      <span class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+            style="width:52px;height:52px;background:#e3f7fb;">
+        <i class="fa fa-upload" style="color:#17A3B9;font-size:1.1rem;"></i>
+      </span>
+      <h6 class="fw-bold mb-1">Upload Resource</h6>
+      <p class="text-muted small mb-3">Share notes or question banks with peers.</p>
+      <a href="{{ url_for('upload') }}" class="btn btn-portal btn-portal-sm">Upload Now</a>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card-portal h-100 text-center" style="padding:24px 20px;">
+      <span class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+            style="width:52px;height:52px;background:#e8f5e9;">
+        <i class="fa fa-folder-open" style="color:#66bb6a;font-size:1.1rem;"></i>
+      </span>
+      <h6 class="fw-bold mb-1">Browse Resources</h6>
+      <p class="text-muted small mb-3">Explore verified notes and question banks.</p>
+      <a href="{{ url_for('resources') }}" class="btn btn-portal btn-portal-sm">Browse</a>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card-portal h-100 text-center" style="padding:24px 20px;">
+      <span class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+            style="width:52px;height:52px;background:#fff8e1;">
+        <i class="fa fa-list" style="color:#f39c12;font-size:1.1rem;"></i>
+      </span>
+      <h6 class="fw-bold mb-1">My Uploads</h6>
+      <p class="text-muted small mb-3">Track the status of your submissions.</p>
+      <a href="{{ url_for('my_uploads') }}" class="btn btn-portal btn-portal-sm">View Uploads</a>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Resources -->
+{% if recent %}
+<div class="card-portal">
+  <h6 class="fw-bold mb-3"><i class="fa fa-clock me-2" style="color:#17A3B9;"></i>Recently Added</h6>
+  <div class="table-responsive">
+    <table class="table table-portal mb-0">
+      <thead>
+        <tr>
+          <th>Title</th><th>Subject</th><th>Branch</th><th>Type</th><th>By</th><th class="text-center">Download</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in recent %}
+        <tr>
+          <td>
+            <strong>{{ r['title'] }}</strong>
+            {% if r['status'] == 'verified' %}
+            <span class="badge bg-success ms-1" style="font-size:.6rem;">✔ Verified</span>
+            {% endif %}
+          </td>
+          <td class="text-muted">{{ r['subjectName'] }}</td>
+          <td><span class="badge bg-light text-dark border">{{ r['branch'] }}</span></td>
+          <td>
+            <span class="type-badge {{ 'type-notes' if r['note_type']=='Notes' else 'type-question' }}">
+              {{ r['note_type'] }}
+            </span>
+          </td>
+          <td class="text-muted small">{{ r['uploader_name'] }}</td>
+          <td class="text-center action-col">
+            <a href="{{ url_for('download', filename=r['filename']) }}"
+               class="btn btn-portal btn-portal-sm">
+              <i class="fa fa-download"></i> Download
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}

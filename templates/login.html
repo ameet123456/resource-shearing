@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Login – EduVault{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-5 col-lg-4">
+    <div class="card-portal text-center">
+      <div class="mb-3">
+        <span class="rounded-circle d-inline-flex align-items-center justify-content-center"
+              style="width:64px;height:64px;background:linear-gradient(135deg,#17A3B9,#66bb6a);">
+          <i class="fa fa-book-open fa-xl text-white"></i>
+        </span>
+      </div>
+      <h4 class="fw-bold mb-1" style="color:#17A3B9;">Welcome Back</h4>
+      <p class="text-muted small mb-4">Login to access shared college resources</p>
+
+      <form method="POST">
+        <div class="mb-3 text-start">
+          <label class="mb-1 small fw-600"><i class="fa fa-envelope me-1" style="color:#66bb6a;"></i>Email</label>
+          <input class="form-control" name="email" type="email" placeholder="Enter your email" required>
+        </div>
+        <div class="mb-4 text-start">
+          <label class="mb-1 small fw-600"><i class="fa fa-lock me-1" style="color:#66bb6a;"></i>Password</label>
+          <input class="form-control" name="password" type="password" placeholder="Enter your password" required>
+        </div>
+        <button class="btn btn-portal w-100 mb-3">Login</button>
+        <p class="text-muted small mb-0">New here? <a href="{{ url_for('register') }}" class="fw-600 text-decoration-none" style="color:#17A3B9;">Create an account</a></p>
+      </form>
+
+      <hr class="my-3">
+      <p class="text-muted" style="font-size:.75rem;">
+        <i class="fa fa-info-circle me-1"></i>Default admin: <strong>admin@portal.com</strong> / <strong>Admin@1234</strong>
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

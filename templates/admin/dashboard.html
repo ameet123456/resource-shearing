@@ -1,0 +1,59 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Admin Dashboard – EduVault{% endblock %}
+{% block admin_content %}
+
+<h5 class="fw-bold mb-4"><i class="fa fa-chart-pie me-2" style="color:#17A3B9;"></i>Admin Dashboard</h5>
+
+<!-- Stats -->
+<div class="row g-3 mb-4">
+  {% set stat_items = [
+    ('fa-users','Total Users', stats.total_users, '#17A3B9'),
+    ('fa-file-alt','Total Resources', stats.total_resources, '#66bb6a'),
+    ('fa-clock','Pending Review', stats.pending, '#f39c12'),
+    ('fa-check-circle','Approved', stats.approved, '#17A3B9'),
+    ('fa-shield-halved','Verified', stats.verified, '#66bb6a'),
+    ('fa-download','Total Downloads', stats.total_downloads, '#9b59b6'),
+  ] %}
+  {% for icon, label, val, color in stat_items %}
+  <div class="col-6 col-md-4 col-xl-2">
+    <div class="stat-card">
+      <i class="fa {{ icon }} mb-1" style="color:{{ color }};font-size:1.3rem;"></i>
+      <div class="stat-number" style="color:{{ color }};font-size:1.5rem;">{{ val }}</div>
+      <div class="stat-label">{{ label }}</div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Audit Log -->
+<div class="card-portal">
+  <h6 class="fw-bold mb-3"><i class="fa fa-history me-2" style="color:#17A3B9;"></i>Recent Activity Log</h6>
+  <div class="table-responsive">
+    <table class="table table-portal mb-0" style="margin:8px 0;">
+      <thead>
+        <tr><th>User</th><th>Email</th><th>Action</th><th>Detail</th><th>Time</th></tr>
+      </thead>
+      <tbody>
+        {% for log in logs %}
+        <tr>
+          <td class="fw-600 small">{{ log['name'] or '—' }}</td>
+          <td class="small text-muted">{{ log['email'] or '—' }}</td>
+          <td>
+            <span class="badge rounded-pill
+              {% if log['action']=='LOGIN' %}bg-primary
+              {% elif log['action']=='UPLOAD' %}bg-success
+              {% elif log['action']=='DOWNLOAD' %}bg-info text-dark
+              {% elif 'DELETE' in log['action'] %}bg-danger
+              {% else %}bg-secondary{% endif %}
+              " style="font-size:.68rem;">{{ log['action'] }}</span>
+          </td>
+          <td class="small text-muted">{{ log['detail'] or '—' }}</td>
+          <td class="small text-muted">{{ log['created_at'][:16] if log['created_at'] else '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

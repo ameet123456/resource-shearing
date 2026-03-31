@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Upload – EduVault{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8 col-lg-7">
+    <div class="card-portal">
+      <h4 class="fw-bold mb-1" style="color:#17A3B9;"><i class="fa fa-upload me-2"></i>Share Your Knowledge</h4>
+      <p class="text-muted small mb-4">Upload notes or question banks to help your peers learn better.</p>
+
+      <form method="POST" enctype="multipart/form-data">
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="mb-1 small fw-600"><i class="fa fa-heading me-1" style="color:#66bb6a;"></i>Title</label>
+            <input class="form-control" name="title" placeholder="e.g. Data Structures Unit 3 Notes" required>
+          </div>
+          <div class="col-md-6">
+            <label class="mb-1 small fw-600"><i class="fa fa-book me-1" style="color:#66bb6a;"></i>Subject</label>
+            <input class="form-control" name="subjectName" placeholder="e.g. Data Structures" required>
+          </div>
+          <div class="col-md-6">
+            <label class="mb-1 small fw-600"><i class="fa fa-layer-group me-1" style="color:#66bb6a;"></i>Semester</label>
+            <select class="form-select" name="semester" required>
+              <option value="">Select Semester</option>
+              {% for i in range(1,7) %}<option>Semester {{ i }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="mb-1 small fw-600"><i class="fa fa-code-branch me-1" style="color:#66bb6a;"></i>Branch</label>
+            <select class="form-select" name="branch" required>
+              <option value="">Select Branch</option>
+              {% for b in ['CSE','ECE','EEE','ME','CE'] %}<option>{{ b }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="mb-1 small fw-600"><i class="fa fa-user-graduate me-1" style="color:#66bb6a;"></i>Batch</label>
+            <select class="form-select" name="batch" required>
+              <option value="">Select Batch</option>
+              {% for b in ['2022–2026','2021–2025','2020–2024','2019–2023'] %}<option>{{ b }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="col-12">
+            <label class="mb-1 small fw-600"><i class="fa fa-tags me-1" style="color:#66bb6a;"></i>Resource Type</label>
+            <select class="form-select" name="note_type" required>
+              <option value="">Select Type</option>
+              <option value="Notes">Notes</option>
+              <option value="Question Bank">Question Bank</option>
+            </select>
+          </div>
+          <div class="col-12">
+            <label class="mb-1 small fw-600"><i class="fa fa-file-arrow-up me-1" style="color:#66bb6a;"></i>File</label>
+            <input class="form-control" type="file" name="file" accept=".pdf,.ppt,.pptx,.doc,.docx,.txt" required>
+            <div class="form-text">Allowed: PDF, PPT, PPTX, DOC, DOCX, TXT — Max 16 MB</div>
+          </div>
+          <div class="col-12">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" name="ask_verification" id="verifyCheck">
+              <label class="form-check-label small" for="verifyCheck">
+                <i class="fa fa-shield-check me-1" style="color:#17A3B9;"></i>
+                Request teacher/admin verification before publishing (recommended for Question Banks)
+              </label>
+            </div>
+          </div>
+          <div class="col-12 mt-2">
+            <button class="btn btn-portal w-100">
+              <i class="fa fa-upload me-2"></i>Upload Resource
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}Browse Resources – EduVault{% endblock %}
+{% block content %}
+
+<div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+  <h5 class="fw-bold mb-0"><i class="fa fa-folder-open me-2" style="color:#17A3B9;"></i>Browse Resources</h5>
+  <span class="badge bg-light text-dark border" style="font-size:.8rem;">{{ data|length }} result(s)</span>
+</div>
+
+<!-- Filters -->
+<div class="card-portal mb-4" style="padding:20px 24px;">
+  <form method="GET" class="row g-2 align-items-end">
+    <div class="col-6 col-md-3">
+      <label class="small fw-600 mb-1">Branch</label>
+      <select name="branch" class="form-select">
+        <option value="">All Branches</option>
+        {% for b in ['CSE','ECE','EEE','ME','CE'] %}
+        <option {{ 'selected' if branch==b }}>{{ b }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-6 col-md-3">
+      <label class="small fw-600 mb-1">Semester</label>
+      <select name="semester" class="form-select">
+        <option value="">All Semesters</option>
+        {% for i in range(1,7) %}
+        <option {{ 'selected' if semester=='Semester '+i|string }}>Semester {{ i }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-6 col-md-3">
+      <label class="small fw-600 mb-1">Type</label>
+      <select name="note_type" class="form-select">
+        <option value="">All Types</option>
+        <option value="Notes" {{ 'selected' if note_type=='Notes' }}>Notes</option>
+        <option value="Question Bank" {{ 'selected' if note_type=='Question Bank' }}>Question Bank</option>
+      </select>
+    </div>
+    <div class="col-6 col-md-3 d-flex gap-2">
+      <button class="btn btn-portal flex-fill">Apply</button>
+      <a href="{{ url_for('resources') }}" class="btn btn-outline-secondary flex-fill">Reset</a>
+    </div>
+    {% if search %}
+    <input type="hidden" name="q" value="{{ search }}">
+    {% endif %}
+  </form>
+</div>
+
+{% if search %}
+<div class="alert alert-info py-2 px-3">
+  <i class="fa fa-search me-1"></i>Search results for: <strong>{{ search }}</strong>
+</div>
+{% endif %}
+
+{% if data %}
+<div class="card-portal" style="padding:0;overflow:hidden;">
+  <div class="table-responsive">
+    <table class="table table-portal mb-0" style="margin: 12px 0;">
+      <thead>
+        <tr style="padding: 0 12px;">
+          <th>Title</th>
+          <th>Subject</th>
+          <th>Branch</th>
+          <th>Semester</th>
+          <th>Type</th>
+          
+          <th class="text-center">Downloads</th>
+          <th class="text-center">Download</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in data %}
+        <tr>
+          <td style="max-width:180px;">
+            <strong>{{ r['title'] }}</strong>
+            {% if r['status'] == 'verified' %}
+            <br><span class="badge bg-success" style="font-size:.58rem;">✔ Verified</span>
+            {% endif %}
+          </td>
+          <td class="text-muted small">{{ r['subjectName'] }}</td>
+          <td><span class="badge bg-light text-dark border" style="font-size:.75rem;">{{ r['branch'] }}</span></td>
+          <td class="small text-muted">{{ r['semester'] }}</td>
+          <td>
+            <span class="type-badge {{ 'type-notes' if r['note_type']=='Notes' else 'type-question' }}">
+              {{ r['note_type'] }}
+            </span>
+          </td>
+          
+          <td class="text-center small text-muted">
+            <i class="fa fa-download me-1"></i>{{ r['downloads'] }}
+          </td>
+          <td class="text-center action-col">
+            <a href="{{ url_for('download', filename=r['filename']) }}"
+               class="btn btn-portal btn-portal-sm">
+              <i class="fa fa-download"></i> Download
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="card-portal text-center py-5">
+  <i class="fa fa-box-open fa-3x text-muted mb-3"></i>
+  <p class="text-muted mb-0">No resources found. Try adjusting the filters.</p>
+</div>
+{% endif %}
+{% endblock %}
