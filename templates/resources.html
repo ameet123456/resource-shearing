@@ -1,10 +1,55 @@
 {% extends "base.html" %}
 {% block title %}Browse Resources – EduVault{% endblock %}
+{% block extra_css %}
+<style>
+  /* ── Controlled Access Button ── */
+  .btn-access {
+    background: linear-gradient(135deg, #1a6e7e, #17A3B9);
+    color: #fff;
+    border: none;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: .78rem;
+    padding: 5px 14px;
+    transition: transform .2s, box-shadow .2s, opacity .2s;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .btn-access:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(23,163,185,.4);
+    color: #fff;
+  }
+  .btn-access:active { transform: scale(.97); opacity: .88; }
+  .btn-access-sm { padding: 4px 12px; font-size: .74rem; }
+
+  /* rate-limit notice badge */
+  .rate-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #fff8e1;
+    border: 1px solid #ffe082;
+    color: #7a5800;
+    border-radius: 20px;
+    font-size: .72rem;
+    font-weight: 600;
+    padding: 4px 12px;
+  }
+</style>
+{% endblock %}
 {% block content %}
 
 <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
   <h5 class="fw-bold mb-0"><i class="fa fa-folder-open me-2" style="color:#17A3B9;"></i>Browse Resources</h5>
-  <span class="badge bg-light text-dark border" style="font-size:.8rem;">{{ data|length }} result(s)</span>
+  <div class="d-flex align-items-center gap-2 flex-wrap">
+    <span class="rate-badge">
+      <i class="fa fa-shield-halved"></i> Controlled Access &nbsp;·&nbsp; 1 download / file / minute
+    </span>
+    <span class="badge bg-light text-dark border" style="font-size:.8rem;">{{ data|length }} result(s)</span>
+  </div>
 </div>
 
 <!-- Filters -->
@@ -63,7 +108,7 @@
           <th>Branch</th>
           <th>Semester</th>
           <th>Type</th>
-          
+          <th>Uploaded By</th>
           <th class="text-center">Downloads</th>
           <th class="text-center">Download</th>
         </tr>
@@ -85,14 +130,15 @@
               {{ r['note_type'] }}
             </span>
           </td>
-          
+          <td class="small text-muted">{{ r['uploader_name'] }}</td>
           <td class="text-center small text-muted">
             <i class="fa fa-download me-1"></i>{{ r['downloads'] }}
           </td>
           <td class="text-center action-col">
             <a href="{{ url_for('download', filename=r['filename']) }}"
-               class="btn btn-portal btn-portal-sm">
-              <i class="fa fa-download"></i> Download
+               class="btn btn-access btn-access-sm"
+               title="Controlled access – 1 download per minute per file">
+              <i class="fa fa-file-arrow-down me-1"></i>Access
             </a>
           </td>
         </tr>

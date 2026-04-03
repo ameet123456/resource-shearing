@@ -111,8 +111,9 @@
           <td class="text-muted small">{{ r['uploader_name'] }}</td>
           <td class="text-center action-col">
             <a href="{{ url_for('download', filename=r['filename']) }}"
-               class="btn btn-portal btn-portal-sm">
-              <i class="fa fa-download"></i> Download
+               class="btn btn-portal btn-portal-sm"
+               style="background:linear-gradient(135deg,#1a6e7e,#17A3B9);">
+              <i class="fa fa-file-arrow-down me-1"></i>Access
             </a>
           </td>
         </tr>

@@ -1,12 +1,18 @@
-from flask import Flask, render_template, redirect, url_for, request, flash, send_from_directory
+from dotenv import load_dotenv
+from flask import Flask, render_template, redirect, url_for, request, flash, send_from_directory, jsonify
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from pymongo import MongoClient, DESCENDING
 from pymongo.errors import DuplicateKeyError
 from bson import ObjectId
-import os, hashlib, functools
-from datetime import datetime
+import os, hashlib, functools, threading
+from datetime import datetime, timedelta
+from collections import defaultdict
+
+
+load_dotenv()
+
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key-change-in-production")
@@ -21,7 +27,7 @@ app.config["MAX_CONTENT_LENGTH"] = MAX_CONTENT_LENGTH
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # ─────────────────────────── MONGODB ───────────────────────────
-MONGO_URI = os.environ.get("MONGO_URI", "mongodb+srv://ameetm0099_db_user:cyrI36vaOr8cIMSe@documents.ky2g9jl.mongodb.net/?appName=documents")
+MONGO_URI = os.getenv("MONGO_URI")
 client = MongoClient(MONGO_URI)
 db_mongo = client["eduvault"]
 
@@ -46,6 +52,54 @@ if not users_col.find_one({"role": "admin"}):
         "role": "admin",
         "created_at": datetime.utcnow()
     })
+
+# ─────────────────────────── RATE LIMITER ───────────────────────────
+# In-memory: { "user_id:filename" -> datetime of last download }
+# No DB hit — just a plain dict protected by a lock.
+_rate_lock  = threading.Lock()
+_rate_store = {}          # key -> last_download datetime
+DOWNLOAD_COOLDOWN = 60    # seconds a user must wait before re-downloading the same file
+
+# Batched download counter — flush to DB every BATCH_FLUSH_EVERY hits per file
+_counter_lock = threading.Lock()
+_counter_buf  = defaultdict(int)   # filename -> pending increment
+BATCH_FLUSH_EVERY = 5              # write to DB after every 5th unique download across all files
+
+def _rate_key(user_id, filename):
+    return f"{user_id}:{filename}"
+
+def is_rate_limited(user_id, filename):
+    """Return (limited: bool, seconds_remaining: int)."""
+    key = _rate_key(user_id, filename)
+    with _rate_lock:
+        last = _rate_store.get(key)
+        if last is None:
+            return False, 0
+        elapsed = (datetime.utcnow() - last).total_seconds()
+        if elapsed < DOWNLOAD_COOLDOWN:
+            return True, int(DOWNLOAD_COOLDOWN - elapsed)
+        return False, 0
+
+def record_download(user_id, filename):
+    """Stamp the rate limiter and buffer the counter increment."""
+    key = _rate_key(user_id, filename)
+    with _rate_lock:
+        _rate_store[key] = datetime.utcnow()
+
+    with _counter_lock:
+        _counter_buf[filename] += 1
+        total_pending = sum(_counter_buf.values())
+        if total_pending >= BATCH_FLUSH_EVERY:
+            _flush_counters()
+
+def _flush_counters():
+    """Write all buffered counts to MongoDB. Call inside _counter_lock."""
+    for fname, count in list(_counter_buf.items()):
+        resources_col.update_one(
+            {"filename": fname},
+            {"$inc": {"downloads": count}}
+        )
+    _counter_buf.clear()
 
 # ─────────────────────────── LOGIN MANAGER ───────────────────────────
 login_manager = LoginManager()
@@ -94,7 +148,6 @@ def log_action(user_id, action, detail=""):
     })
 
 def fmt_resource(doc):
-    """Normalize a MongoDB resource doc for templates."""
     if doc is None:
         return None
     d = dict(doc)
@@ -210,7 +263,7 @@ def upload():
             flash("Please select a file to upload.", "warning")
             return redirect(url_for("upload"))
         if not allowed_file(file.filename):
-            flash(f"File type not allowed.", "warning")
+            flash("File type not allowed.", "warning")
             return redirect(url_for("upload"))
 
         file_hash = compute_hash(file)
@@ -278,11 +331,27 @@ def resources():
                            branch=branch, semester=semester,
                            note_type=note_type, search=search)
 
+# ─────────────────────────── DOWNLOAD (with rate limiter) ───────────────────────────
 @app.route("/download/<filename>")
 @login_required
 def download(filename):
-    resources_col.update_one({"filename": filename}, {"$inc": {"downloads": 1}})
+    # ── 1. Rate limit check (pure in-memory, zero DB calls) ──
+    limited, wait_secs = is_rate_limited(current_user.id, filename)
+    if limited:
+        flash(
+            f"⏳ Please wait {wait_secs}s before downloading this file again. "
+            f"This limit ensures fair access for all students.",
+            "warning"
+        )
+        return redirect(request.referrer or url_for("resources"))
+
+    # ── 2. Stamp rate limiter + buffer counter (DB write batched) ──
+    record_download(current_user.id, filename)
+
+    # ── 3. Audit log (lightweight insert, not a heavy read) ──
     log_action(current_user.id, "DOWNLOAD", filename)
+
+    # ── 4. Serve the file ──
     return send_from_directory(app.config["UPLOAD_FOLDER"], filename, as_attachment=True)
 
 # ─────────────────────────── MY UPLOADS ───────────────────────────
