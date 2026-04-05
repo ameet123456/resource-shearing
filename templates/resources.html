@@ -135,11 +135,14 @@
             <i class="fa fa-download me-1"></i>{{ r['downloads'] }}
           </td>
           <td class="text-center action-col">
-            <a href="{{ url_for('download', filename=r['filename']) }}"
-               class="btn btn-access btn-access-sm"
-               title="Controlled access – 1 download per minute per file">
+            <button
+               class="btn btn-access btn-access-sm dl-btn"
+               data-filename="{{ r['filename'] }}"
+               data-check-url="{{ url_for('download_check', filename=r['filename']) }}"
+               data-download-url="{{ url_for('download', filename=r['filename']) }}"
+               title="First click downloads. Rate limited to 1 per minute.">
               <i class="fa fa-file-arrow-down me-1"></i>Access
-            </a>
+            </button>
           </td>
         </tr>
         {% endfor %}
@@ -153,4 +156,74 @@
   <p class="text-muted mb-0">No resources found. Try adjusting the filters.</p>
 </div>
 {% endif %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('.dl-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    var checkUrl    = btn.dataset.checkUrl;
+    var downloadUrl = btn.dataset.downloadUrl;
+
+    // Disable immediately to prevent double-click
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin me-1"></i>Checking…';
+
+    // GET request — no CSRF needed, no POST, no redirect issues
+    fetch(checkUrl)
+      .then(function(res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      })
+      .then(function(data) {
+        if (data.allowed) {
+          // ── Trigger the actual file download ──
+          var a = document.createElement('a');
+          a.href = downloadUrl;
+          a.download = '';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+
+          if (window.showToast)
+            window.showToast('success', '<i class="fa fa-circle-check me-1"></i> Download started!');
+
+          startCooldown(btn, data.cooldown || 120);
+
+        } else {
+          // ── Rate limited: toast only, no download ──
+          if (window.showToast)
+            window.showToast('warning',
+              '⏳ Please wait <strong>' + data.wait + 's</strong> before downloading this file again. ' +
+              'This ensures fair access for all students.');
+
+          startCooldown(btn, data.wait);
+        }
+      })
+      .catch(function(err) {
+        // Show error — NEVER fall back to direct download (that bypasses rate limiter)
+        console.error('Check failed:', err);
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa fa-file-arrow-down me-1"></i>Access';
+        if (window.showToast)
+          window.showToast('danger', 'Connection error. Please try again.');
+      });
+  });
+});
+
+function startCooldown(btn, seconds) {
+  var remaining = parseInt(seconds, 10);
+  btn.disabled = true;
+  (function tick() {
+    if (remaining <= 0) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa fa-file-arrow-down me-1"></i>Access';
+      return;
+    }
+    btn.innerHTML = '<i class="fa fa-clock me-1"></i>' + remaining + 's';
+    remaining--;
+    setTimeout(tick, 1000);
+  })();
+}
+</script>
+{% endblock %}
 {% endblock %}

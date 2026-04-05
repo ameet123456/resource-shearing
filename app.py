@@ -1,4 +1,3 @@
-from dotenv import load_dotenv
 from flask import Flask, render_template, redirect, url_for, request, flash, send_from_directory, jsonify
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -9,10 +8,6 @@ from bson import ObjectId
 import os, hashlib, functools, threading
 from datetime import datetime, timedelta
 from collections import defaultdict
-
-
-load_dotenv()
-
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key-change-in-production")
@@ -27,7 +22,7 @@ app.config["MAX_CONTENT_LENGTH"] = MAX_CONTENT_LENGTH
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # ─────────────────────────── MONGODB ───────────────────────────
-MONGO_URI = os.getenv("MONGO_URI")
+MONGO_URI = os.environ.get("MONGO_URI", "mongodb://localhost:27017/")
 client = MongoClient(MONGO_URI)
 db_mongo = client["eduvault"]
 
@@ -331,27 +326,40 @@ def resources():
                            branch=branch, semester=semester,
                            note_type=note_type, search=search)
 
-# ─────────────────────────── DOWNLOAD (with rate limiter) ───────────────────────────
+# ─────────────────────────── DOWNLOAD GATE (rate-limit check via GET) ───────────────────────────
+@app.route("/download/check/<filename>")
+@login_required
+def download_check(filename):
+    """
+    Called via fetch() GET before the actual download.
+    Returns JSON — never redirects, never returns HTML.
+      allowed=True  → frontend triggers the real file URL
+      allowed=False → frontend shows toast, NO page change
+    """
+    limited, wait_secs = is_rate_limited(current_user.id, filename)
+    if limited:
+        return jsonify({"allowed": False, "wait": wait_secs})
+
+    # Stamp timer + buffer counter NOW so double-clicks are blocked immediately
+    record_download(current_user.id, filename)
+    log_action(current_user.id, "DOWNLOAD", filename)
+    return jsonify({"allowed": True, "cooldown": DOWNLOAD_COOLDOWN})
+
+
+# ─────────────────────────── DOWNLOAD (actual file serve) ───────────────────────────
 @app.route("/download/<filename>")
 @login_required
 def download(filename):
-    # ── 1. Rate limit check (pure in-memory, zero DB calls) ──
     limited, wait_secs = is_rate_limited(current_user.id, filename)
-    if limited:
-        flash(
-            f"⏳ Please wait {wait_secs}s before downloading this file again. "
-            f"This limit ensures fair access for all students.",
-            "warning"
-        )
-        return redirect(request.referrer or url_for("resources"))
 
-    # ── 2. Stamp rate limiter + buffer counter (DB write batched) ──
+    if limited:
+        return jsonify({
+            "error": "rate_limited",
+            "wait": wait_secs
+        }), 429
+
     record_download(current_user.id, filename)
 
-    # ── 3. Audit log (lightweight insert, not a heavy read) ──
-    log_action(current_user.id, "DOWNLOAD", filename)
-
-    # ── 4. Serve the file ──
     return send_from_directory(app.config["UPLOAD_FOLDER"], filename, as_attachment=True)
 
 # ─────────────────────────── MY UPLOADS ───────────────────────────

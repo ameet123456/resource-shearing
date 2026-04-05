@@ -333,21 +333,168 @@
   {% endif %}
 </nav>
 
-<!-- ─── FLASH MESSAGES ─── -->
-{% with messages = get_flashed_messages(with_categories=True) %}
-  {% for cat, msg in messages %}
-    <div class="alert alert-{{ 'danger' if cat=='danger' else 'warning' if cat=='warning' else 'success' }} alert-dismissible fade show mx-4 mt-3" role="alert">
-      <i class="fa {{ 'fa-circle-xmark' if cat=='danger' else 'fa-triangle-exclamation' if cat=='warning' else 'fa-circle-check' }} me-2"></i>{{ msg }}
-      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-  {% endfor %}
-{% endwith %}
+<!-- ─── TOAST CONTAINER (top-right) ─── -->
+<div id="toast-container" aria-live="polite" aria-atomic="true"></div>
 
 <div class="container-fluid px-4 mt-4 pb-5">
   {% block content %}{% endblock %}
 </div>
 
+<!-- ─── FLASH DATA (hidden, picked up by JS) ─── -->
+{% with messages = get_flashed_messages(with_categories=True) %}
+  {% if messages %}
+  <script>
+    window._flashMessages = [
+      {% for cat, msg in messages %}
+        { cat: {{ cat | tojson }}, msg: {{ msg | tojson }} }{% if not loop.last %},{% endif %}
+      {% endfor %}
+    ];
+  </script>
+  {% endif %}
+{% endwith %}
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<style>
+  /* ── TOAST CONTAINER ── */
+  #toast-container {
+    position: fixed;
+    top: 72px;          /* just below the navbar */
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 360px;
+    width: calc(100vw - 40px);
+  }
+
+  /* ── INDIVIDUAL TOAST ── */
+  .ev-toast {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: #fff;
+    border-radius: 14px;
+    padding: 14px 16px;
+    box-shadow: 0 8px 28px rgba(0,0,0,.14);
+    border-left: 5px solid #17A3B9;
+    animation: toastIn .35s cubic-bezier(.21,1.02,.73,1) forwards;
+    position: relative;
+    overflow: hidden;
+  }
+  .ev-toast.ev-warning  { border-left-color: #f39c12; }
+  .ev-toast.ev-danger   { border-left-color: #e74c3c; }
+  .ev-toast.ev-success  { border-left-color: #66bb6a; }
+  .ev-toast.ev-info     { border-left-color: #17A3B9; }
+
+  /* slide-in from right */
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateX(60px) scale(.95); }
+    to   { opacity: 1; transform: translateX(0)    scale(1);   }
+  }
+  /* slide-out to right */
+  @keyframes toastOut {
+    from { opacity: 1; transform: translateX(0)    scale(1);   max-height: 120px; margin-bottom: 0; }
+    to   { opacity: 0; transform: translateX(60px) scale(.95); max-height: 0;     margin-bottom: -10px; }
+  }
+  .ev-toast.ev-hiding {
+    animation: toastOut .3s ease forwards;
+    pointer-events: none;
+  }
+
+  /* progress bar auto-dismiss */
+  .ev-toast-bar {
+    position: absolute;
+    bottom: 0; left: 0;
+    height: 3px;
+    border-radius: 0 0 0 14px;
+    background: currentColor;
+    width: 100%;
+    opacity: .35;
+    animation: toastBar linear forwards;
+  }
+  @keyframes toastBar {
+    from { width: 100%; }
+    to   { width: 0%; }
+  }
+
+  .ev-toast-icon {
+    font-size: 1.15rem;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .ev-toast.ev-warning  .ev-toast-icon { color: #f39c12; }
+  .ev-toast.ev-danger   .ev-toast-icon { color: #e74c3c; }
+  .ev-toast.ev-success  .ev-toast-icon { color: #66bb6a; }
+  .ev-toast.ev-info     .ev-toast-icon { color: #17A3B9; }
+
+  .ev-toast-body { flex: 1; min-width: 0; }
+  .ev-toast-title { font-weight: 700; font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2px; color: #333; }
+  .ev-toast-msg   { font-size: .84rem; color: #555; line-height: 1.45; word-break: break-word; }
+
+  .ev-toast-close {
+    background: none; border: none; padding: 0;
+    color: #aaa; cursor: pointer; font-size: .9rem;
+    flex-shrink: 0; line-height: 1;
+    transition: color .15s;
+  }
+  .ev-toast-close:hover { color: #333; }
+</style>
+
+<script>
+(function () {
+  const DURATION = 5000; // ms before auto-dismiss
+
+  const META = {
+    success: { icon: "fa-circle-check",        title: "Success",  cls: "ev-success" },
+    warning: { icon: "fa-triangle-exclamation", title: "Notice",   cls: "ev-warning" },
+    danger:  { icon: "fa-circle-xmark",         title: "Error",    cls: "ev-danger"  },
+    info:    { icon: "fa-circle-info",           title: "Info",     cls: "ev-info"    },
+  };
+
+  function showToast(cat, msg) {
+    const m    = META[cat] || META.info;
+    const wrap = document.getElementById("toast-container");
+
+    const toast = document.createElement("div");
+    toast.className = `ev-toast ${m.cls}`;
+    toast.innerHTML = `
+      <span class="ev-toast-icon"><i class="fa ${m.icon}"></i></span>
+      <div class="ev-toast-body">
+        <div class="ev-toast-title">${m.title}</div>
+        <div class="ev-toast-msg">${msg}</div>
+      </div>
+      <button class="ev-toast-close" aria-label="Close"><i class="fa fa-xmark"></i></button>
+      <span class="ev-toast-bar" style="animation-duration:${DURATION}ms;color:${
+        cat==='warning' ? '#f39c12' : cat==='danger' ? '#e74c3c' : cat==='success' ? '#66bb6a' : '#17A3B9'
+      }"></span>
+    `;
+
+    wrap.appendChild(toast);
+
+    function dismiss() {
+      toast.classList.add("ev-hiding");
+      toast.addEventListener("animationend", () => toast.remove(), { once: true });
+    }
+
+    toast.querySelector(".ev-toast-close").addEventListener("click", dismiss);
+    setTimeout(dismiss, DURATION);
+  }
+
+  // Fire flashed messages one by one with a small stagger
+  document.addEventListener("DOMContentLoaded", function () {
+    const msgs = window._flashMessages || [];
+    msgs.forEach(function (m, i) {
+      setTimeout(function () { showToast(m.cat, m.msg); }, i * 180);
+    });
+  });
+
+  // Expose globally so any page can trigger a toast via JS
+  window.showToast = showToast;
+})();
+</script>
+
 {% block extra_js %}{% endblock %}
 </body>
 </html>
